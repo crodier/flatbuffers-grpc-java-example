@@ -1,0 +1,12 @@
+pluginManagement {
+    repositories {
+        maven { url 'https://repo.spring.io/milestone' }
+        gradlePluginPortal()
+    }
+}
+rootProject.name = 'fb-grpc'
+
+include 'fb-lib'
+include 'grpc-server'
+include 'grpc-client'
+include 'grpc-test-app'

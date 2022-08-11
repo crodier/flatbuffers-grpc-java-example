@@ -1,0 +1,11 @@
+plugins {
+    id 'application'
+}
+
+application {
+    mainClass = 'com.example.testapp.TestApp'
+}
+
+dependencies {
+    implementation project(':grpc-client')
+}

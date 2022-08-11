@@ -1,0 +1,34 @@
+plugins {
+    id 'java-library'
+}
+
+task flatc(type: Exec) {
+    workingDir = "${projectDir}"
+    commandLine = "${projectDir}/flatc"
+    args = ["--grpc", "-j", "-o", "${buildDir}/generated/sources/flatbuffers/java/main/", "${projectDir}/src/main/flatbuffers/StupidServer.fbs"]
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir("${buildDir}/generated/sources/flatbuffers/java/main/")
+        }
+    }
+}
+
+compileJava{
+    dependsOn(flatc)
+}
+ext{
+    flatbuffersVersion = '2.0.3'
+    grpcVersion = '1.48.1'
+}
+
+dependencies {
+    api 'javax.annotation:javax.annotation-api:1.3.2' //used by generated classes
+    api "com.google.flatbuffers:flatbuffers-java:$flatbuffersVersion" //used by generated classes
+    api "com.google.flatbuffers:flatbuffers-java-grpc:$flatbuffersVersion" //used by generated classes
+    api "io.grpc:grpc-services:$grpcVersion" //used by generated classes
+
+    api "io.grpc:grpc-netty:$grpcVersion" //used by client and server
+}

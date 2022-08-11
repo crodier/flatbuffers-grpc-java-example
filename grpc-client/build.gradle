@@ -1,0 +1,11 @@
+plugins {
+    id 'java-library'
+}
+
+def grpcVersion = '1.48.1'
+
+dependencies {
+    api project(':fb-lib')
+
+    api "io.grpc:grpc-stub:${grpcVersion}"
+}

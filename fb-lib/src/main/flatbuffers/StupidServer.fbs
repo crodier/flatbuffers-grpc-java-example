@@ -1,0 +1,13 @@
+namespace com.exmaple.stupidserver.flatbuffers;
+
+rpc_service StupidServer {
+    DoWork(Request): Response (streaming: "none");
+}
+
+table Request{
+    work: string;
+}
+
+table Response{
+    result: string;
+}
