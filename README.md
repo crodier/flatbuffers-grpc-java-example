@@ -1,5 +1,15 @@
 # Gradle + flatbuffers + grpc + spring boot
 
+## Notes
+1.  Reasonable gradle install for Mint
+    https://www.markaicode.com/gradle-installation-on-linux-mint-21/
+
+1.  IntelliJ, change Gradle to be Java 17
+https://stackoverflow.com/questions/72117858/incompatible-because-this-component-declares-a-component-compatible-with-java-11
+
+2.  "flatc" in fb-lib/bin/flatc, needs to be binary, and 23.3.3.
+If it is not, build flatc 23.3.3 and put it there.
+    
 ## Build
 ```shell
 ./gradlew build

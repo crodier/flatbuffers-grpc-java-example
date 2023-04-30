@@ -8,10 +8,48 @@ subprojects {
 
 
     repositories {
+        // using this commit of the java flatbuffers lib is
+        // an easy way to get 23.3.3 jar into this build.
+        // This is no loger on maven central, seems like a build issue with flatbuffers
+        // latest and well known, flatbuffers-java release, as of 4/29/2023
+        // docs:  https://docs.gradle.org/current/userguide/declaring_repositories.html
+        flatDir {
+            dirs project.rootDir.toString() + '/maven-repo-lib'
+            // dirs './maven-repo-lib'
+        }
+
+        // useful for building locally
+        // mavenLocal()
+        google()
+
+        // good default
         mavenCentral()
     }
 
     dependencies {
+        // https://stackoverflow.com/questions/20700053/how-to-add-local-jar-file-dependency-to-build-gradle-file
+        // compile fileTree(dir: 'lib', include: ['*.jar'])
+        // implementation files('lib/flatbuffers-java-grpc-23.3.3.jar')
+        implementation(files("./lib/flatbuffers-java-grpc-23.3.3.jar"))
         testImplementation group: 'junit', name: 'junit', version: '4.12'
     }
 }
+
+repositories {
+    // using this commit of the java flatbuffers lib is
+    // an easy way to get 23.3.3 jar into this build.
+    // This is no loger on maven central, seems like a build issue with flatbuffers
+    // latest and well known, flatbuffers-java release, as of 4/29/2023
+    // docs:  https://docs.gradle.org/current/userguide/declaring_repositories.html
+    flatDir {
+        dirs './maven-repo-lib'
+    }
+
+    // useful for building locally
+    // mavenLocal()
+    google()
+
+    // good default
+    mavenCentral()
+}
+
