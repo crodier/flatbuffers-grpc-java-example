@@ -7,7 +7,7 @@
 1.  IntelliJ, change Gradle to be Java 17
 https://stackoverflow.com/questions/72117858/incompatible-because-this-component-declares-a-component-compatible-with-java-11
 
-2.  "flatc" in fb-lib/bin/flatc, needs to be binary, and 23.3.3.
+2.  "flatc" in fb-lib/flatc, needs to be binary, and 23.3.3.
 If it is not, build flatc 23.3.3 and put it there.
     
 ## Build
