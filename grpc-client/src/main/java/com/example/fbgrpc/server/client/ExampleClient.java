@@ -1,19 +1,18 @@
-package com.example.fbgrpc.stupidserver.client;
+package com.example.fbgrpc.server.client;
 
-import com.exmaple.stupidserver.flatbuffers.Request;
-import com.exmaple.stupidserver.flatbuffers.Response;
-import com.exmaple.stupidserver.flatbuffers.StupidServerGrpc;
+import com.example.fbgrpc.flatbuffers.ExampleServerGrpc;
 import com.google.flatbuffers.FlatBufferBuilder;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import com.example.fbgrpc.flatbuffers.*;
 
-public class StupidServerClient {
+public class ExampleClient {
 
-    private StupidServerGrpc.StupidServerBlockingStub blockingStub;
+    private ExampleServerGrpc.ExampleServerBlockingStub blockingStub;
     private final String host;
     private final int port;
 
-    public StupidServerClient(String host, int port) {
+    public ExampleClient(String host, int port) {
         this.host = host;
         this.port = port;
     }
@@ -24,7 +23,7 @@ public class StupidServerClient {
                 //More http client configuration should be here
                 .build();
 
-        blockingStub = StupidServerGrpc.newBlockingStub(channel);
+        blockingStub = ExampleServerGrpc.newBlockingStub(channel);
     }
 
     /**

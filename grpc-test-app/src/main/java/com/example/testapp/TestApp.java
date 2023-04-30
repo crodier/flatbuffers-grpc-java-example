@@ -1,16 +1,16 @@
 package com.example.testapp;
 
-import com.example.fbgrpc.stupidserver.client.StupidServerClient;
+import com.example.fbgrpc.server.client.ExampleClient;
 
 public class TestApp {
     public static void main(String[] args) {
 
-        StupidServerClient stupidServerClient = new StupidServerClient("127.0.0.1", 9090);
-        stupidServerClient.start();
+        ExampleClient exampleClient = new ExampleClient("127.0.0.1", 9090);
+        exampleClient.start();
 
         System.out.println("Do request");
 
-        String response = stupidServerClient.work("Please work!");
+        String response = exampleClient.work("Please work!");
 
         System.out.println("Got response: " + response);
     }

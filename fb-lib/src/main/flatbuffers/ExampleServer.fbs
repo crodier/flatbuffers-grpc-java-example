@@ -1,6 +1,6 @@
-namespace com.exmaple.stupidserver.flatbuffers;
+namespace com.example.fbgrpc.flatbuffers;
 
-rpc_service StupidServer {
+rpc_service ExampleServer {
     DoWork(Request): Response (streaming: "none");
 }
 

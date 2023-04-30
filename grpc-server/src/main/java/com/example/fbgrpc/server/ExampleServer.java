@@ -1,12 +1,10 @@
-package com.example.fbgrpc.stupidserver;
+package com.example.fbgrpc.server;
 
-import com.exmaple.stupidserver.flatbuffers.Request;
-import com.exmaple.stupidserver.flatbuffers.Response;
-import com.exmaple.stupidserver.flatbuffers.StupidServerGrpc;
 import com.google.flatbuffers.FlatBufferBuilder;
 import io.grpc.stub.StreamObserver;
+import com.example.fbgrpc.flatbuffers.*;
 
-public class StupidServer extends StupidServerGrpc.StupidServerImplBase {
+public class ExampleServer extends ExampleServerGrpc.ExampleServerImplBase {
     @Override
     public void doWork(Request request, StreamObserver<Response> responseObserver) {
         String work = request.work();

@@ -5,7 +5,9 @@ plugins {
 task flatc(type: Exec) {
     workingDir = projectDir.toString()
     commandLine = projectDir.toString() + "/flatc"
-    args = ["--grpc", "-j", "-o", "${buildDir}/generated/sources/flatbuffers/java/main/", "${projectDir}/src/main/flatbuffers/StupidServer.fbs"]
+    args = ["--grpc", "-j", "-o",
+            "${buildDir}/generated/sources/flatbuffers/java/main/",
+            "${projectDir}/src/main/flatbuffers/ExampleServer.fbs"]
 }
 
 sourceSets {

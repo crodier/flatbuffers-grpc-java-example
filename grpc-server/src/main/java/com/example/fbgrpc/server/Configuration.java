@@ -1,4 +1,4 @@
-package com.example.fbgrpc.stupidserver;
+package com.example.fbgrpc.server;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class Configuration {
     @Bean
-    StupidServer provideSS() {
-        return new StupidServer();
+    ExampleServer provideSS() {
+        return new ExampleServer();
     }
 }
