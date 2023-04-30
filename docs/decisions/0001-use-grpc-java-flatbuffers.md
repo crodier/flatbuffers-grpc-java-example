@@ -101,3 +101,7 @@ Chosen option: "gRPC w/ Flatbuffers", because
 
 #### Flatbuffers own explanation:
 https://github.com/google/flatbuffers/wiki/Why-FlatBuffers-vs-other-options%3F
+
+#### Serializtion library usage (17th at time of writing)
+
+https://mvnrepository.com/open-source/object-serialization?p=2
