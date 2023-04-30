@@ -5,7 +5,10 @@
 1.  Open JDK 17:  
     ```shell
             sudo apt install openjdk-17-jdk
+            sudo update-alternatives --config java
     ```
+    The java alternative needs to be Java 17 for Spring boot.  This can also
+    be done using gradle properties in your home folder .gradle.
 1.  Reasonable gradle install for Mint
     https://www.markaicode.com/gradle-installation-on-linux-mint-21/
 

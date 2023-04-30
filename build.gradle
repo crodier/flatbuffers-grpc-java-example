@@ -4,8 +4,13 @@ subprojects {
     group 'com.example'
     version '1.0-SNAPSHOT'
 
-    sourceCompatibility = 1.17
+    // sourceCompatibility = 1.17
 
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
 
     repositories {
         // using this commit of the java flatbuffers lib is
@@ -24,6 +29,9 @@ subprojects {
 
         // good default
         mavenCentral()
+
+        // spring boot
+        maven { url 'https://repo.spring.io/milestone' }
     }
 
     dependencies {
