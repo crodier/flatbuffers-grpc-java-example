@@ -130,3 +130,4 @@ https://stackoverflow.com/questions/57885828/netty-cannot-access-class-jdk-inter
 #### Benchmarks
 
 https://flatbuffers.dev/flatbuffers_benchmarks.html
+https://github.com/LesnyRumcajs/grpc_bench
