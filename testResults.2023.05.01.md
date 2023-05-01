@@ -82,7 +82,7 @@ Min correlated mics=96
 
 ### Baseline from non-native optimizations, Async and Blocking
 
-```
+```shell
 Do request
 --------------------- ASYNC (SLOW) --------------------
 Time start is=590576141969679
@@ -108,7 +108,7 @@ Min correlated mics=131
 ```
 
 ### 16 bytes - size the byte buffers
-```
+```shell
 Do request
 --------------------- ASYNC (SLOW) --------------------
 Time start is=591205360875710
@@ -134,7 +134,7 @@ Min correlated mics=110
 ```
 
 ### Size the byte buffer: 32 bytes
-```
+```shell
 Do request
 --------------------- ASYNC (SLOW) --------------------
 Time start is=591404902491986
