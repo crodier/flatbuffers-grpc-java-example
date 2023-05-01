@@ -1,13 +1,16 @@
 namespace com.example.fbgrpc.flatbuffers;
 
 rpc_service ExampleServer {
-    DoWork(Request): Response (streaming: "none");
+    DoWork(Request): Response (streaming: "bidi");
 }
 
 table Request{
-    work: string;
+    // work: string;
+    time:long;
 }
 
 table Response{
-    result: string;
+    // result: string;
+    time:long;
+    receipt:long;
 }

@@ -9,6 +9,7 @@ import com.example.fbgrpc.flatbuffers.*;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
+import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -97,6 +98,7 @@ public class ExampleClient {
     }
 
     public void recordRoute() throws InterruptedException {
+        System.out.println("Start="+new Date());
         long start = System.nanoTime();
         // info("*** RecordRoute");
         final AtomicLong totalTook = new AtomicLong();
@@ -126,9 +128,9 @@ public class ExampleClient {
 
             @Override
             public void onCompleted() {
-                System.out.println("on completed here");
-                System.out.println("here Total took="+totalTook.get());
-                System.out.println("Total="+totalReceipt.get());
+//                System.out.println("on completed here");
+//                System.out.println("here Total took="+totalTook.get());
+//                System.out.println("Total="+totalReceipt.get());
                 finishLatch.countDown();
 
             }
@@ -178,6 +180,10 @@ public class ExampleClient {
 //        System.out.println("Total took="+totalTook.get());
 //        System.out.println("Total="+totalReceipt.get());
         System.out.println("Avg MICS="+(totalNanos/LATCH_SIZE/1000));
+        long milliTime = (totalNanos/1_000_000);
+        System.out.println("Took millis="+milliTime+", count="+LATCH_SIZE);
+        System.out.println("Per milli="+(LATCH_SIZE/milliTime)+", count="+LATCH_SIZE);
 
+        System.out.println("End="+new Date());
     }
 }
