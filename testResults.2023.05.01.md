@@ -1,3 +1,35 @@
+### Most recent, with 1) Netty Epoll, native, and 2) Unsafe
+
+#### Options
+This enables Netty unsafe, which shows as enabled in Spring Boot.
+```shell
+--add-opens java.base/jdk.internal.misc=ALL-UNNAMED -Dio.netty.tryReflectionSetAccessible=true
+```
+
+Do request
+--------------------- ASYNC (SLOW) --------------------
+Time start is=599881585434974
+Time start is=599881590673273
+Took Nanos=764797972
+Avg Nanos=76479
+Avg MICS=76
+Took millis=765, count=10000
+Per milli=13, count=10000
+Avg correlated mics=561713.8192574
+Min correlated mics=298884
+--------------------- Blocking (much faster) --------------------
+Avg correlated mics=292.2020981
+Min correlated mics=96
+Took Nanos=2955947193
+Avg Nanos=295594
+Avg MICS=295
+Took millis=2956, count=10000
+Per milli=3, count=10000
+Avg correlated mics=292.2020981
+Min correlated mics=96
+
+### Baseline from non-native optimizations, Async and Blocking
+
 Do request
 --------------------- ASYNC (SLOW) --------------------
 Time start is=590576141969679

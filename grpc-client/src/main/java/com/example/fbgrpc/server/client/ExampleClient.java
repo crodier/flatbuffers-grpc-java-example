@@ -85,8 +85,8 @@ public class ExampleClient {
         @Override
         public void onNext(Response response) {
             long time = System.nanoTime();
-            if (finishLatch.getCount() < 2)
-                System.out.println("Time is="+time);
+//            if (finishLatch.getCount() < 2)
+//                System.out.println("Time is="+time);
 
             correlatedFinishTime.put(response.id(), time);
             finishLatch.countDown();

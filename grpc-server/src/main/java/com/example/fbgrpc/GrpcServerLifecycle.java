@@ -2,6 +2,7 @@ package com.example.fbgrpc;
 
 import io.grpc.BindableService;
 import io.grpc.Server;
+import io.grpc.ServerBuilder;
 import io.grpc.netty.NettyServerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,6 +10,7 @@ import org.springframework.context.SmartLifecycle;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 import static java.util.Objects.requireNonNull;
 
@@ -50,7 +52,10 @@ public class GrpcServerLifecycle implements SmartLifecycle {
     }
 
     private void createServer() {
-        NettyServerBuilder nettyServerBuilder = NettyServerBuilder.forPort(port);
+        ServerBuilder nettyServerBuilder = ServerBuilder.forPort(port);
+        // nettyServerBuilder.directExecutor();
+
+        nettyServerBuilder.executor(Executors.newCachedThreadPool());
 
         // Add http server specific configuration here
 

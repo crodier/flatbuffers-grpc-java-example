@@ -106,6 +106,27 @@ https://github.com/google/flatbuffers/wiki/Why-FlatBuffers-vs-other-options%3F
 
 https://mvnrepository.com/artifact/com.google.flatbuffers/flatbuffers-java/usages
 
-#### Serializtion library usage (17th at time of writing)
+#### Serialization library usage (17th at time of writing)
 
 https://mvnrepository.com/open-source/object-serialization?p=2
+
+## Future Research
+
+Netty usage in Espresso, with EPoll
+https://engineering.linkedin.com/blog/2019/06/espresso-new-netty-framework
+
+70% improvement for Netty w/ SolarFlare (kernell bypass)
+https://www.xilinx.com/publications/results/onload-netty-io-benchmark-results.pdf
+
+EFA (Elastic Fabric Adapter) for Kernel Bypass networking on AWS
+https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/efa.html
+
+#### Netty EPoll is challenging to add, but adding it..
+https://netty.io/wiki/native-transports.html
+
+#### More Netty optimizations
+https://stackoverflow.com/questions/57885828/netty-cannot-access-class-jdk-internal-misc-unsafe
+
+#### Benchmarks
+
+https://flatbuffers.dev/flatbuffers_benchmarks.html
