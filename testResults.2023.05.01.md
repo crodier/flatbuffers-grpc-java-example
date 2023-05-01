@@ -1,5 +1,16 @@
 ### Most recent, with 1) Netty Epoll, native, and 2) Unsafe
 
+#### Primary performance test machine (my desktop)
+```shell
+sudo lshw
+```
+```shell
+ *-cpu
+          description: CPU
+          product: Intel(R) Core(TM) i7-4790K CPU @ 4.00GHz
+          vendor: Intel Corp.
+```
+
 ### Options
 This enables Netty unsafe, which shows as enabled in Spring Boot.
 ```shell
