@@ -8,13 +8,15 @@ import com.example.fbgrpc.flatbuffers.*;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
-import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class ExampleClient {
+
+
+    int LATCH_SIZE = 10_000;
 
     private ExampleServerGrpc.ExampleServerBlockingStub blockingStub;
     private ExampleServerGrpc.ExampleServerFutureStub nonBlockingStub;
@@ -23,9 +25,10 @@ public class ExampleClient {
     private final String host;
     private final int port;
 
-    public ExampleClient(String host, int port) {
+    public ExampleClient(String host, int port, int experimentSize) {
         this.host = host;
         this.port = port;
+        this.LATCH_SIZE = experimentSize;
     }
 
     public void start() {
@@ -47,17 +50,32 @@ public class ExampleClient {
         correlatedFinishTime = new ConcurrentHashMap<>();
     }
 
-    int LATCH_SIZE = 10_000;
+    public void recordRouteAsync() throws InterruptedException {
+        long start = System.nanoTime();
+        clearMaps();
+        runExperimentAsync();
 
-    public void recordRoute() throws InterruptedException {
-        System.out.println("Start="+new Date());
+        printStats(start);
+
+        // make a report
+        calcAndPrintCorrelation();
+    }
+
+    public void recordRouteBlocking() throws InterruptedException {
         long start = System.nanoTime();
 
         clearMaps();
-        runExperimentNonBlocking();
+        runExperimentBlocking();
 
+        printStats(start);
+
+        // make a report
+        calcAndPrintCorrelation();
+    }
+
+    private void printStats(long start) {
         long end = System.nanoTime();
-        long totalNanos = (end-start);
+        long totalNanos = (end- start);
         System.out.println("Took Nanos="+totalNanos);
         System.out.println("Avg Nanos="+(totalNanos/LATCH_SIZE));
 //        System.out.println("Total took="+totalTook.get());
@@ -66,11 +84,6 @@ public class ExampleClient {
         long milliTime = (totalNanos/1_000_000);
         System.out.println("Took millis="+milliTime+", count="+LATCH_SIZE);
         System.out.println("Per milli="+(LATCH_SIZE/milliTime)+", count="+LATCH_SIZE);
-
-        System.out.println("End="+new Date());
-
-        // make a report
-        calcAndPrintCorrelation();
     }
 
     final CountDownLatch finishLatch = new CountDownLatch(LATCH_SIZE);
@@ -98,7 +111,7 @@ public class ExampleClient {
         }
     };
 
-    private void runExperimentNonBlocking() throws InterruptedException {
+    private void runExperimentBlocking() throws InterruptedException {
         for (long i=0; i<LATCH_SIZE; i++) {
             Request req = makeFlatBufferRequest(i);
 
@@ -106,7 +119,7 @@ public class ExampleClient {
 
             correlatedStartTime.put(i, time);
             Response response = blockingStub.doWork(req);
-            correlatedFinishTime.put(i, System.nanoTime());
+            correlatedFinishTime.put(response.id(), System.nanoTime());
         }
         calcAndPrintCorrelation();
 

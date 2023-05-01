@@ -5,14 +5,19 @@ import com.example.fbgrpc.server.client.ExampleClient;
 public class TestApp {
     public static void main(String[] args) {
 
-        ExampleClient exampleClient = new ExampleClient("127.0.0.1", 9090);
+        int experiment = 10_000;
+
+        ExampleClient exampleClient = new ExampleClient("127.0.0.1", 9090, experiment);
         exampleClient.start();
 
         System.out.println("Do request");
 
         // String response = exampleClient.work("Please work!");
         try {
-            exampleClient.recordRoute();
+            System.out.println("--------------------- ASYNC (SLOW) --------------------");
+            exampleClient.recordRouteAsync();
+            System.out.println("--------------------- Blocking (much faster) --------------------");
+            exampleClient.recordRouteBlocking();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
