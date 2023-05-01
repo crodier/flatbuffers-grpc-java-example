@@ -1,8 +1,15 @@
 namespace com.example.fbgrpc.flatbuffers;
 
 rpc_service ExampleServer {
+    // https://stackoverflow.com/questions/65526157/flatbuffer-grpc-streaming-definitions-bidi-server-client
     DoWorkBidi(Request): Response (streaming: "bidi");
     DoWork(Request): Response (streaming: "none");
+
+    // not useful in this context, but for reference
+    // DoWorkStreamServer(Request): Response (streaming: "server");
+    // DoWorkStreamServerIdempotent(Request): Response (streaming: "server", idempotent);
+    // DoWorkStreamClient(Request): Response (streaming: "client");
+
 }
 
 table Request{

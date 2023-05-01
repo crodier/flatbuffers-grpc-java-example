@@ -15,8 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 public class ExampleClient {
 
-
-    int LATCH_SIZE = 10_000;
+    public int LATCH_SIZE = 10_000;
 
     private ExampleServerGrpc.ExampleServerBlockingStub blockingStub;
     private ExampleServerGrpc.ExampleServerFutureStub nonBlockingStub;
@@ -33,6 +32,7 @@ public class ExampleClient {
 
     public void start() {
         ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port)
+
                 .usePlaintext() //SSL actually as default
                 //More http client configuration should be here
                 .build();
@@ -50,26 +50,20 @@ public class ExampleClient {
         correlatedFinishTime = new ConcurrentHashMap<>();
     }
 
+
     public void recordRouteAsync() throws InterruptedException {
         long start = System.nanoTime();
         clearMaps();
         runExperimentAsync();
-
         printStats(start);
-
-        // make a report
         calcAndPrintCorrelation();
     }
 
     public void recordRouteBlocking() throws InterruptedException {
         long start = System.nanoTime();
-
         clearMaps();
         runExperimentBlocking();
-
         printStats(start);
-
-        // make a report
         calcAndPrintCorrelation();
     }
 
@@ -81,7 +75,7 @@ public class ExampleClient {
 //        System.out.println("Total took="+totalTook.get());
 //        System.out.println("Total="+totalReceipt.get());
         System.out.println("Avg MICS="+(totalNanos/LATCH_SIZE/1000));
-        long milliTime = (totalNanos/1_000_000);
+        long milliTime = (totalNanos/1_000_000)+1;
         System.out.println("Took millis="+milliTime+", count="+LATCH_SIZE);
         System.out.println("Per milli="+(LATCH_SIZE/milliTime)+", count="+LATCH_SIZE);
     }
@@ -90,7 +84,11 @@ public class ExampleClient {
     StreamObserver<Response> responseObserver = new StreamObserver<>() {
         @Override
         public void onNext(Response response) {
-            correlatedFinishTime.put(response.id(), System.nanoTime());
+            long time = System.nanoTime();
+            if (finishLatch.getCount() < 2)
+                System.out.println("Time is="+time);
+
+            correlatedFinishTime.put(response.id(), time);
             finishLatch.countDown();
         }
 
@@ -138,6 +136,8 @@ public class ExampleClient {
                 Request req = makeFlatBufferRequest(i);
 
                 long time = System.nanoTime();
+                if (i < 2)
+                    System.out.println("Time start is="+time);
 
                 correlatedStartTime.put(i, time);
 
@@ -198,4 +198,5 @@ public class ExampleClient {
         Request req = Request.getRootAsRequest(builder.dataBuffer());
         return req;
     }
+
 }

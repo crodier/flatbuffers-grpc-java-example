@@ -18,6 +18,15 @@ public class TestApp {
             exampleClient.recordRouteAsync();
             System.out.println("--------------------- Blocking (much faster) --------------------");
             exampleClient.recordRouteBlocking();
+
+            // not useful
+//            System.out.println("--------------------- Stream Client  --------------------");
+//            exampleClient.recordRouteStreamClient();
+
+            // alson ot useful in this context
+            //            System.out.println("--------------------- Stream Server  --------------------");
+            //            exampleClient.recordRouteServerStream();
+
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
