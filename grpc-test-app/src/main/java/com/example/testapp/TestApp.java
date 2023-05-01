@@ -10,8 +10,12 @@ public class TestApp {
 
         System.out.println("Do request");
 
-        String response = exampleClient.work("Please work!");
-
-        System.out.println("Got response: " + response);
+        // String response = exampleClient.work("Please work!");
+        try {
+            exampleClient.recordRoute();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        // System.out.println("Got response: " + response);
     }
 }
