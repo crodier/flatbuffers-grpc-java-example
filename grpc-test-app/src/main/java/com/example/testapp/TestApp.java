@@ -5,30 +5,32 @@ import com.example.fbgrpc.server.client.ExampleClient;
 public class TestApp {
     public static void main(String[] args) {
 
-        int experiment = 50_000;
+        int experiment = 20_000;
 
         ExampleClient exampleClient = new ExampleClient("127.0.0.1", 9090, experiment);
         exampleClient.start();
 
-        System.out.println("Do request");
+        System.out.println("Experiment size: "+experiment);
 
         // String response = exampleClient.work("Please work!");
         try {
-//            System.out.println("--------------------- ASYNC (SLOW) --------------------");
-//            exampleClient.recordRouteAsync();
+            // async, fails over 10k request.. probably needs to wait for responses.
+//            System.out.println("--------------------- ASYNC (Great throughput, slow latency) --------------------");
+//            exampleClient.recordRouteAsync(true);
+
             System.out.println("--------------------- Blocking (much faster) --------------------");
             // warmup
-            exampleClient.LATCH_SIZE = 1000;
+            exampleClient.EXPERIMENT_SIZE = 1000;
             exampleClient.recordRouteBlocking(false);
 
-            exampleClient.LATCH_SIZE = experiment;
+            exampleClient.EXPERIMENT_SIZE = experiment;
             exampleClient.recordRouteBlocking(true);
 
-            // not useful
+            // not useful (in this application)
 //            System.out.println("--------------------- Stream Client  --------------------");
 //            exampleClient.recordRouteStreamClient();
 
-            // alson ot useful in this context
+            // not useful (in this application)
             //            System.out.println("--------------------- Stream Server  --------------------");
             //            exampleClient.recordRouteServerStream();
 

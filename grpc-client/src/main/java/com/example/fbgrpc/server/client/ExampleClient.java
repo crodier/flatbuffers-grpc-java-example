@@ -15,25 +15,27 @@ import java.util.concurrent.TimeUnit;
 
 public class ExampleClient {
 
-    public int LATCH_SIZE = 10_000;
+    public int EXPERIMENT_SIZE = 10_000;
+
+    private final String host;
+    private final int port;
+    Map<Long, Long> correlatedStartTime = new ConcurrentHashMap<>();
+    Map<Long, Long> correlatedFinishTime = new ConcurrentHashMap<>();
 
     private ExampleServerGrpc.ExampleServerBlockingStub blockingStub;
     private ExampleServerGrpc.ExampleServerFutureStub nonBlockingStub;
     private ExampleServerGrpc.ExampleServerStub asyncStub;
 
-    private final String host;
-    private final int port;
 
     public ExampleClient(String host, int port, int experimentSize) {
         this.host = host;
         this.port = port;
-        this.LATCH_SIZE = experimentSize;
+        this.EXPERIMENT_SIZE = experimentSize;
     }
 
     public void start() {
         ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port)
-
-                .usePlaintext() //SSL actually as default
+                .usePlaintext() // disable SSL
                 //More http client configuration should be here
                 .build();
 
@@ -42,30 +44,30 @@ public class ExampleClient {
         asyncStub = ExampleServerGrpc.newStub(channel);
     }
 
-    Map<Long, Long> correlatedStartTime = new ConcurrentHashMap<>();
-    Map<Long, Long> correlatedFinishTime = new ConcurrentHashMap<>();
 
     public void clearMaps() {
         correlatedStartTime = new ConcurrentHashMap<>();
         correlatedFinishTime = new ConcurrentHashMap<>();
     }
 
-
-    public void recordRouteAsync() throws InterruptedException {
+    public void recordRouteAsync(boolean printStats) throws InterruptedException {
         clearMaps();
         long start = System.nanoTime();
         runExperimentAsync();
-        printStats(start);
-        calcAndPrintCorrelation();
+        if (printStats) {
+            printStats(start);
+            calcAndPrintCorrelation(printStats);
+        }
     }
 
     public void recordRouteBlocking(boolean printStats) throws InterruptedException {
         clearMaps();
         long start = System.nanoTime();
         runExperimentBlocking();
+
         if (printStats) {
             printStats(start);
-            calcAndPrintCorrelation();
+            calcAndPrintCorrelation(printStats);
         }
     }
 
@@ -73,16 +75,16 @@ public class ExampleClient {
         long end = System.nanoTime();
         long totalNanos = (end- start);
         System.out.println("Took Nanos="+totalNanos);
-        System.out.println("Avg Nanos="+(totalNanos/LATCH_SIZE));
+        System.out.println("Avg Nanos="+(totalNanos/ EXPERIMENT_SIZE));
 //        System.out.println("Total took="+totalTook.get());
 //        System.out.println("Total="+totalReceipt.get());
-        System.out.println("Avg MICS="+(totalNanos/LATCH_SIZE/1000));
+        System.out.println("Avg MICS="+(totalNanos/ EXPERIMENT_SIZE /1000));
         long milliTime = (totalNanos/1_000_000)+1;
-        System.out.println("Took millis="+milliTime+", count="+LATCH_SIZE);
-        System.out.println("Per milli="+(LATCH_SIZE/milliTime)+", count="+LATCH_SIZE);
+        System.out.println("Took millis="+milliTime+", count="+ EXPERIMENT_SIZE);
+        System.out.println("Per milli="+(EXPERIMENT_SIZE /milliTime)+", count="+ EXPERIMENT_SIZE);
     }
 
-    final CountDownLatch finishLatch = new CountDownLatch(LATCH_SIZE);
+    final CountDownLatch finishLatch = new CountDownLatch(EXPERIMENT_SIZE);
     StreamObserver<Response> responseObserver = new StreamObserver<>() {
         @Override
         public void onNext(Response response) {
@@ -112,7 +114,7 @@ public class ExampleClient {
     };
 
     private void runExperimentBlocking() throws InterruptedException {
-        for (long i=0; i<LATCH_SIZE; i++) {
+        for (long i = 0; i< EXPERIMENT_SIZE; i++) {
             Request req = makeFlatBufferRequest(i);
 
             long startTime = System.nanoTime();
@@ -121,8 +123,6 @@ public class ExampleClient {
             correlatedFinishTime.put(response.id(), end);
             correlatedStartTime.put(i, startTime);
         }
-        calcAndPrintCorrelation();
-
     }
 
     private void runExperimentAsync() throws InterruptedException {
@@ -134,16 +134,13 @@ public class ExampleClient {
 
         try
         {
-            for (long i=0; i<LATCH_SIZE; i++) {
+            for (long i = 0; i< EXPERIMENT_SIZE; i++) {
                 Request req = makeFlatBufferRequest(i);
 
                 long time = System.nanoTime();
-                if (i < 2)
-                    System.out.println("Time start is="+time);
+                requestObserver.onNext(req);
 
                 correlatedStartTime.put(i, time);
-
-                requestObserver.onNext(req);
 
                 if (finishLatch.getCount() == 0) {
                     // RPC completed or errored before we finished sending.
@@ -167,11 +164,11 @@ public class ExampleClient {
         finishLatch.await(1, TimeUnit.MINUTES);
     }
 
-    private void calcAndPrintCorrelation() {
+    private void calcAndPrintCorrelation(boolean printStats) {
         long totalCorrelated  = 0;
         long maxCorrelated = 0;
         long minCorrelated = Long.MAX_VALUE;
-        for (long i = 0; i< LATCH_SIZE; i++) {
+        for (long i = 0; i< EXPERIMENT_SIZE; i++) {
             long startCorrelated = correlatedStartTime.get(i);
             try {
                 long endCorrelated = correlatedFinishTime.get(i);
@@ -190,9 +187,11 @@ public class ExampleClient {
             }
         }
 
-        double avgCorrelatedMics = (double) totalCorrelated / LATCH_SIZE / 1000.0d;
-        System.out.println("Avg correlated mics="+avgCorrelatedMics);
-        System.out.println("Min correlated mics="+minCorrelated/1000);
+        double avgCorrelatedMics = (double) totalCorrelated / EXPERIMENT_SIZE / 1000.0d;
+        if (printStats) {
+            System.out.println("Avg correlated mics=" + avgCorrelatedMics);
+            System.out.println("Min correlated mics=" + minCorrelated / 1000);
+        }
     }
 
     private static Request makeFlatBufferRequest(long i) {

@@ -8,6 +8,20 @@ This enables Netty unsafe, which shows as enabled in Spring Boot.
 
 ## Performance tests
 
+### Warm-up the test before timing
+
+```shell
+Experiment size: 20000
+--------------------- Blocking (much faster) --------------------
+Took Nanos=3592959723
+Avg Nanos=179647
+Avg MICS=179
+Took millis=3593, count=20000
+Per milli=5, count=20000
+Avg correlated mics=176.22431210000002
+Min correlated mics=85
+```
+
 ### 5-1-2023: Direct buffer for Netty Server builder.
 
 ```java
