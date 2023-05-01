@@ -6,6 +6,8 @@ This enables Netty unsafe, which shows as enabled in Spring Boot.
 --add-opens java.base/jdk.internal.misc=ALL-UNNAMED -Dio.netty.tryReflectionSetAccessible=true
 ```
 
+#### Note the 96 mics round trip with native optimizations of Netty enabled
+```
 Do request
 --------------------- ASYNC (SLOW) --------------------
 Time start is=599881585434974
@@ -27,9 +29,11 @@ Took millis=2956, count=10000
 Per milli=3, count=10000
 Avg correlated mics=292.2020981
 Min correlated mics=96
+```
 
 ### Baseline from non-native optimizations, Async and Blocking
 
+```
 Do request
 --------------------- ASYNC (SLOW) --------------------
 Time start is=590576141969679
@@ -52,9 +56,10 @@ Took millis=2839, count=10000
 Per milli=3, count=10000
 Avg correlated mics=280.41398719999995
 Min correlated mics=131
+```
 
-
-16 bytes
+### 16 bytes - size the byte buffers
+```
 Do request
 --------------------- ASYNC (SLOW) --------------------
 Time start is=591205360875710
@@ -77,8 +82,10 @@ Took millis=2893, count=10000
 Per milli=3, count=10000
 Avg correlated mics=285.82817239999997
 Min correlated mics=110
+```
 
-32 bytes
+### Size the byte buffer: 32 bytes
+```
 Do request
 --------------------- ASYNC (SLOW) --------------------
 Time start is=591404902491986
@@ -101,4 +108,4 @@ Took millis=2769, count=10000
 Per milli=3, count=10000
 Avg correlated mics=274.1003606
 Min correlated mics=108
-
+```
