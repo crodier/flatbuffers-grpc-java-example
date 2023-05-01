@@ -1,7 +1,8 @@
 namespace com.example.fbgrpc.flatbuffers;
 
 rpc_service ExampleServer {
-    DoWork(Request): Response (streaming: "bidi");
+    DoWorkBidi(Request): Response (streaming: "bidi");
+    DoWork(Request): Response (streaming: "none");
 }
 
 table Request{

@@ -6,9 +6,17 @@ import com.example.fbgrpc.flatbuffers.*;
 
 public class ExampleServer extends ExampleServerGrpc.ExampleServerImplBase {
 
+    @Override
+    public void doWork(Request request, StreamObserver<Response> responseObserver) {
+
+        Response response = createResponseOnWork(request);
+
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
 
     @Override
-    public StreamObserver<Request> doWork(StreamObserver<Response> responseObserver) {
+    public StreamObserver<Request> doWorkBidi(StreamObserver<Response> responseObserver) {
         return new StreamObserver<>() {
             @Override
             public void onNext(Request request) {

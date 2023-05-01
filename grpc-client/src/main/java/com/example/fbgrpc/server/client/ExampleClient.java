@@ -9,10 +9,10 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
 import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class ExampleClient {
 
@@ -39,55 +39,90 @@ public class ExampleClient {
         asyncStub = ExampleServerGrpc.newStub(channel);
     }
 
-    ConcurrentHashMap<Long, Long> correlatedStartTime = new ConcurrentHashMap<>();
-    ConcurrentHashMap<Long, Long> correlatedFinishTime = new ConcurrentHashMap<>();
+    Map<Long, Long> correlatedStartTime = new ConcurrentHashMap<>();
+    Map<Long, Long> correlatedFinishTime = new ConcurrentHashMap<>();
+
+    public void clearMaps() {
+        correlatedStartTime = new ConcurrentHashMap<>();
+        correlatedFinishTime = new ConcurrentHashMap<>();
+    }
+
+    int LATCH_SIZE = 10_000;
 
     public void recordRoute() throws InterruptedException {
         System.out.println("Start="+new Date());
         long start = System.nanoTime();
-        // info("*** RecordRoute");
-        final AtomicLong totalTook = new AtomicLong();
-        final AtomicLong totalReceipt = new AtomicLong();
 
-        int LATCH_SIZE = 10_000;
-        final CountDownLatch finishLatch = new CountDownLatch(LATCH_SIZE);
-        StreamObserver<Response> responseObserver = new StreamObserver<>() {
-            @Override
-            public void onNext(Response response) {
-                correlatedFinishTime.put(response.id(), System.nanoTime());
-                finishLatch.countDown();
-            }
+        clearMaps();
+        runExperimentNonBlocking();
 
-            @Override
-            public void onError(Throwable t) {
-                Status status = Status.fromThrowable(t);
-                System.out.println("error on client+"+t.getMessage());
-                finishLatch.countDown();
-            }
+        long end = System.nanoTime();
+        long totalNanos = (end-start);
+        System.out.println("Took Nanos="+totalNanos);
+        System.out.println("Avg Nanos="+(totalNanos/LATCH_SIZE));
+//        System.out.println("Total took="+totalTook.get());
+//        System.out.println("Total="+totalReceipt.get());
+        System.out.println("Avg MICS="+(totalNanos/LATCH_SIZE/1000));
+        long milliTime = (totalNanos/1_000_000);
+        System.out.println("Took millis="+milliTime+", count="+LATCH_SIZE);
+        System.out.println("Per milli="+(LATCH_SIZE/milliTime)+", count="+LATCH_SIZE);
 
-            @Override
-            public void onCompleted() {
+        System.out.println("End="+new Date());
+
+        // make a report
+        calcAndPrintCorrelation();
+    }
+
+    final CountDownLatch finishLatch = new CountDownLatch(LATCH_SIZE);
+    StreamObserver<Response> responseObserver = new StreamObserver<>() {
+        @Override
+        public void onNext(Response response) {
+            correlatedFinishTime.put(response.id(), System.nanoTime());
+            finishLatch.countDown();
+        }
+
+        @Override
+        public void onError(Throwable t) {
+            Status status = Status.fromThrowable(t);
+            System.out.println("error on client+"+t.getMessage());
+            finishLatch.countDown();
+        }
+
+        @Override
+        public void onCompleted() {
 //                System.out.println("on completed here");
 //                System.out.println("here Total took="+totalTook.get());
 //                System.out.println("Total="+totalReceipt.get());
-                finishLatch.countDown();
+            finishLatch.countDown();
 
-            }
-        };
+        }
+    };
 
-        StreamObserver<Request> requestObserver = asyncStub.doWork(responseObserver);
+    private void runExperimentNonBlocking() throws InterruptedException {
+        for (long i=0; i<LATCH_SIZE; i++) {
+            Request req = makeFlatBufferRequest(i);
+
+            long time = System.nanoTime();
+
+            correlatedStartTime.put(i, time);
+            Response response = blockingStub.doWork(req);
+            correlatedFinishTime.put(i, System.nanoTime());
+        }
+        calcAndPrintCorrelation();
+
+    }
+
+    private void runExperimentAsync() throws InterruptedException {
+        StreamObserver<Request> requestObserver = asyncStub.doWorkBidi(responseObserver);
+        runExperimentInner(requestObserver);
+    }
+
+    private void runExperimentInner(StreamObserver<Request> requestObserver) throws InterruptedException {
+
         try
         {
-
             for (long i=0; i<LATCH_SIZE; i++) {
-                FlatBufferBuilder builder = new FlatBufferBuilder();
-
-                int requestOffset = Request.createRequest(builder,
-                        // builder.createString(request),
-                        123L, i);
-                builder.finish(requestOffset);
-
-                Request req = Request.getRootAsRequest(builder.dataBuffer());
+                Request req = makeFlatBufferRequest(i);
 
                 long time = System.nanoTime();
 
@@ -115,41 +150,39 @@ public class ExampleClient {
 
         // Receiving happens asynchronously
         finishLatch.await(1, TimeUnit.MINUTES);
+    }
 
-        long end = System.nanoTime();
-        long totalNanos = (end-start);
-        System.out.println("Took Nanos="+totalNanos);
-        System.out.println("Avg Nanos="+(totalNanos/LATCH_SIZE));
-//        System.out.println("Total took="+totalTook.get());
-//        System.out.println("Total="+totalReceipt.get());
-        System.out.println("Avg MICS="+(totalNanos/LATCH_SIZE/1000));
-        long milliTime = (totalNanos/1_000_000);
-        System.out.println("Took millis="+milliTime+", count="+LATCH_SIZE);
-        System.out.println("Per milli="+(LATCH_SIZE/milliTime)+", count="+LATCH_SIZE);
-
-        System.out.println("End="+new Date());
-
-        // make a report
-
+    private void calcAndPrintCorrelation() {
         long totalCorrelated  = 0;
         long maxCorrelated = 0;
         long minCorrelated = Long.MAX_VALUE;
-        for (long i=0; i<LATCH_SIZE; i++) {
+        for (long i = 0; i< LATCH_SIZE; i++) {
             long startCorrelated = correlatedStartTime.get(i);
             long endCorrelated = correlatedFinishTime.get(i);
             long correlatedTook = endCorrelated-startCorrelated;
-            if (i % 500 == 0)
-                System.out.println("Correlated ms="+correlatedTook/1_000_000);
+//            if (i % 500 == 0)
+//                System.out.println("Correlated ms="+correlatedTook/1_000_000);
             totalCorrelated += correlatedTook;
             if (correlatedTook > maxCorrelated)
                 maxCorrelated = totalCorrelated;
-            if (totalCorrelated < minCorrelated)
-                minCorrelated = totalCorrelated;
+            if (correlatedTook < minCorrelated)
+                minCorrelated = correlatedTook;
         }
 
         double avgCorrelatedMics = (double) totalCorrelated / LATCH_SIZE / 1000.0d;
         System.out.println("Avg correlated mics="+avgCorrelatedMics);
         System.out.println("Min correlated mics="+minCorrelated/1000);
+    }
 
+    private static Request makeFlatBufferRequest(long i) {
+        FlatBufferBuilder builder = new FlatBufferBuilder();
+
+        int requestOffset = Request.createRequest(builder,
+                // builder.createString(request),
+                123L, i);
+        builder.finish(requestOffset);
+
+        Request req = Request.getRootAsRequest(builder.dataBuffer());
+        return req;
     }
 }
