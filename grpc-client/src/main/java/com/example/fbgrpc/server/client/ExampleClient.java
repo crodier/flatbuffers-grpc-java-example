@@ -115,9 +115,9 @@ public class ExampleClient {
 
             long startTime = System.nanoTime();
             Response response = blockingStub.doWork(req);
-
+            long end = System.nanoTime();
+            correlatedFinishTime.put(response.id(), end);
             correlatedStartTime.put(i, startTime);
-            correlatedFinishTime.put(response.id(), System.nanoTime());
         }
         calcAndPrintCorrelation();
 
@@ -171,15 +171,21 @@ public class ExampleClient {
         long minCorrelated = Long.MAX_VALUE;
         for (long i = 0; i< LATCH_SIZE; i++) {
             long startCorrelated = correlatedStartTime.get(i);
-            long endCorrelated = correlatedFinishTime.get(i);
-            long correlatedTook = endCorrelated-startCorrelated;
+            try {
+                long endCorrelated = correlatedFinishTime.get(i);
+                long correlatedTook = endCorrelated - startCorrelated;
 //            if (i % 500 == 0)
 //                System.out.println("Correlated ms="+correlatedTook/1_000_000);
-            totalCorrelated += correlatedTook;
-            if (correlatedTook > maxCorrelated)
-                maxCorrelated = totalCorrelated;
-            if (correlatedTook < minCorrelated)
-                minCorrelated = correlatedTook;
+                totalCorrelated += correlatedTook;
+                if (correlatedTook > maxCorrelated)
+                    maxCorrelated = totalCorrelated;
+                if (correlatedTook < minCorrelated)
+                    minCorrelated = correlatedTook;
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("Trying to get count="+i+", exception="+e);
+            }
         }
 
         double avgCorrelatedMics = (double) totalCorrelated / LATCH_SIZE / 1000.0d;
