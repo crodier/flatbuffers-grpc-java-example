@@ -8,7 +8,7 @@ This enables Netty unsafe, which shows as enabled in Spring Boot.
 
 ## Performance tests
 
-### Warm-up the test before timing
+### Warm-up the test before timing:  85 mics fastest RTT
 
 ```shell
 Experiment size: 20000
