@@ -1,13 +1,48 @@
 ### Most recent, with 1) Netty Epoll, native, and 2) Unsafe
 
-#### Options
+### Options
 This enables Netty unsafe, which shows as enabled in Spring Boot.
 ```shell
 --add-opens java.base/jdk.internal.misc=ALL-UNNAMED -Dio.netty.tryReflectionSetAccessible=true
 ```
 
-#### Note the 96 mics round trip with native optimizations of Netty enabled
+## Performance tests
+
+### 5-1-2023: Direct buffer for Netty Server builder.
+
+```java
+// Direct Executor makes sense, single threaded
+nettyServerBuilder.directExecutor();
 ```
+
+#### Results
+```shell
+Do request
+--------------------- ASYNC (SLOW) --------------------
+Time start is=603477950899571
+Time start is=603477954966309
+Took Nanos=569902522
+Avg Nanos=56990
+Avg MICS=56
+Took millis=570, count=10000
+Per milli=17, count=10000
+Avg correlated mics=423086.8204344
+Min correlated mics=317177
+--------------------- Blocking (much faster) --------------------
+Avg correlated mics=255.4281925
+Min correlated mics=95
+Took Nanos=2577476401
+Avg Nanos=257747
+Avg MICS=257
+Took millis=2578, count=10000
+Per milli=3, count=10000
+Avg correlated mics=255.4281925
+Min correlated mics=95
+```
+
+## Native netty EPoll and optimizations
+#### Note the 96 mics round trip with native optimizations of Netty enabled
+```shell
 Do request
 --------------------- ASYNC (SLOW) --------------------
 Time start is=599881585434974
