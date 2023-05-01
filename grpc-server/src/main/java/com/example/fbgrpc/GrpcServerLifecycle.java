@@ -52,10 +52,13 @@ public class GrpcServerLifecycle implements SmartLifecycle {
     }
 
     private void createServer() {
-        ServerBuilder nettyServerBuilder = ServerBuilder.forPort(port);
-        // nettyServerBuilder.directExecutor();
+        NettyServerBuilder nettyServerBuilder = NettyServerBuilder.forPort(port);
 
-        nettyServerBuilder.executor(Executors.newCachedThreadPool());
+        // Direct Executor makes sense, single threaded
+        nettyServerBuilder.directExecutor();
+
+        // for higher throughput, at a cost of latency
+        // nettyServerBuilder.executor(Executors.newCachedThreadPool());
 
         // Add http server specific configuration here
 
