@@ -52,16 +52,16 @@ public class ExampleClient {
 
 
     public void recordRouteAsync() throws InterruptedException {
-        long start = System.nanoTime();
         clearMaps();
+        long start = System.nanoTime();
         runExperimentAsync();
         printStats(start);
         calcAndPrintCorrelation();
     }
 
     public void recordRouteBlocking() throws InterruptedException {
-        long start = System.nanoTime();
         clearMaps();
+        long start = System.nanoTime();
         runExperimentBlocking();
         printStats(start);
         calcAndPrintCorrelation();
@@ -113,10 +113,10 @@ public class ExampleClient {
         for (long i=0; i<LATCH_SIZE; i++) {
             Request req = makeFlatBufferRequest(i);
 
-            long time = System.nanoTime();
-
-            correlatedStartTime.put(i, time);
+            long startTime = System.nanoTime();
             Response response = blockingStub.doWork(req);
+
+            correlatedStartTime.put(i, startTime);
             correlatedFinishTime.put(response.id(), System.nanoTime());
         }
         calcAndPrintCorrelation();
@@ -188,7 +188,7 @@ public class ExampleClient {
     }
 
     private static Request makeFlatBufferRequest(long i) {
-        FlatBufferBuilder builder = new FlatBufferBuilder();
+        FlatBufferBuilder builder = new FlatBufferBuilder(16);
 
         int requestOffset = Request.createRequest(builder,
                 // builder.createString(request),
