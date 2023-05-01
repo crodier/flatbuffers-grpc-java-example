@@ -59,12 +59,14 @@ public class ExampleClient {
         calcAndPrintCorrelation();
     }
 
-    public void recordRouteBlocking() throws InterruptedException {
+    public void recordRouteBlocking(boolean printStats) throws InterruptedException {
         clearMaps();
         long start = System.nanoTime();
         runExperimentBlocking();
-        printStats(start);
-        calcAndPrintCorrelation();
+        if (printStats) {
+            printStats(start);
+            calcAndPrintCorrelation();
+        }
     }
 
     private void printStats(long start) {

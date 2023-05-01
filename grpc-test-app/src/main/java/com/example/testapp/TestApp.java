@@ -5,7 +5,7 @@ import com.example.fbgrpc.server.client.ExampleClient;
 public class TestApp {
     public static void main(String[] args) {
 
-        int experiment = 10_000;
+        int experiment = 50_000;
 
         ExampleClient exampleClient = new ExampleClient("127.0.0.1", 9090, experiment);
         exampleClient.start();
@@ -14,10 +14,15 @@ public class TestApp {
 
         // String response = exampleClient.work("Please work!");
         try {
-            System.out.println("--------------------- ASYNC (SLOW) --------------------");
-            exampleClient.recordRouteAsync();
+//            System.out.println("--------------------- ASYNC (SLOW) --------------------");
+//            exampleClient.recordRouteAsync();
             System.out.println("--------------------- Blocking (much faster) --------------------");
-            exampleClient.recordRouteBlocking();
+            // warmup
+            exampleClient.LATCH_SIZE = 1000;
+            exampleClient.recordRouteBlocking(false);
+
+            exampleClient.LATCH_SIZE = experiment;
+            exampleClient.recordRouteBlocking(true);
 
             // not useful
 //            System.out.println("--------------------- Stream Client  --------------------");
