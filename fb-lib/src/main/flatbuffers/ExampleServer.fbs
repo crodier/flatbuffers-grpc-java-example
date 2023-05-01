@@ -7,10 +7,11 @@ rpc_service ExampleServer {
 table Request{
     // work: string;
     time:long;
+    id:long;
 }
 
 table Response{
     // result: string;
     time:long;
-    receipt:long;
+    id:long;
 }

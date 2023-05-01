@@ -1,7 +1,6 @@
 package com.example.fbgrpc.server.client;
 
 import com.example.fbgrpc.flatbuffers.ExampleServerGrpc;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.flatbuffers.FlatBufferBuilder;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -10,11 +9,10 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
 import java.util.Date;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Level;
 
 public class ExampleClient {
 
@@ -41,61 +39,8 @@ public class ExampleClient {
         asyncStub = ExampleServerGrpc.newStub(channel);
     }
 
-
-    /**
-     * Human friendly client api with all Flatbuffers stuff hidden
-     *
-     * @param request
-     * @return
-     */
-    public String work(String request) {
-
-        long totalTime = 0;
-        int count = 1_000;
-        long minNanos = Long.MAX_VALUE;
-        long minRecipt = Long.MAX_VALUE;
-
-        FlatBufferBuilder builder = new FlatBufferBuilder();
-
-        for (int i=0; i<count; i++) {
-            long start = System.nanoTime();
-
-            int requestOffset = Request.createRequest(builder,
-                    // builder.createString(request),
-                    start);
-            builder.finish(requestOffset);
-
-            Request req = Request.getRootAsRequest(builder.dataBuffer());
-
-
-            // Response response = blockingStub.doWork(req);
-            // ListenableFuture<Response> respFuture = nonBlockingStub.doWork(req);
-//            Response response = null;
-//            try {
-//                response = respFuture.get();
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            } catch (ExecutionException e) {
-//                e.printStackTrace();
-//            }
-            long finish = System.nanoTime();
-            long tookNanos = finish - start;
-
-//            long receipt = response.receipt();
-//            if (receipt < minRecipt)
-//                minRecipt = receipt;
-
-            if (tookNanos < minNanos)
-                minNanos = tookNanos;
-            totalTime += tookNanos;
-        }
-
-        double avgMics = totalTime/count/1000;
-        System.out.println("Took avg mics="+avgMics+
-                ", min="+minNanos/1000+
-                ", receipt="+minRecipt/1000);
-        return "Done";
-    }
+    ConcurrentHashMap<Long, Long> correlatedStartTime = new ConcurrentHashMap<>();
+    ConcurrentHashMap<Long, Long> correlatedFinishTime = new ConcurrentHashMap<>();
 
     public void recordRoute() throws InterruptedException {
         System.out.println("Start="+new Date());
@@ -104,19 +49,13 @@ public class ExampleClient {
         final AtomicLong totalTook = new AtomicLong();
         final AtomicLong totalReceipt = new AtomicLong();
 
-        int LATCH_SIZE = 100_000;
+        int LATCH_SIZE = 10_000;
         final CountDownLatch finishLatch = new CountDownLatch(LATCH_SIZE);
-        StreamObserver<Response> responseObserver = new StreamObserver<Response>() {
+        StreamObserver<Response> responseObserver = new StreamObserver<>() {
             @Override
             public void onNext(Response response) {
+                correlatedFinishTime.put(response.id(), System.nanoTime());
                 finishLatch.countDown();
-                long now = System.nanoTime();
-                long resTime = response.time();
-                // these are meaningless.. streams...
-                // TODO: need to correlate request IDs
-//                totalReceipt.getAndAdd(response.receipt());
-//                totalTook.getAndAdd(now-resTime);
-                // System.out.println("OnNext="+response.time());
             }
 
             @Override
@@ -140,15 +79,19 @@ public class ExampleClient {
         try
         {
 
-            for (int i=0; i<LATCH_SIZE; i++) {
+            for (long i=0; i<LATCH_SIZE; i++) {
                 FlatBufferBuilder builder = new FlatBufferBuilder();
 
                 int requestOffset = Request.createRequest(builder,
                         // builder.createString(request),
-                        System.nanoTime());
+                        123L, i);
                 builder.finish(requestOffset);
 
                 Request req = Request.getRootAsRequest(builder.dataBuffer());
+
+                long time = System.nanoTime();
+
+                correlatedStartTime.put(i, time);
 
                 requestObserver.onNext(req);
 
@@ -156,7 +99,7 @@ public class ExampleClient {
                     // RPC completed or errored before we finished sending.
                     // Sending further requests won't error, but they will just be thrown away.
                     System.out.println("Done requests");
-                    return;
+                    break;
                 }
             }
 
@@ -185,5 +128,28 @@ public class ExampleClient {
         System.out.println("Per milli="+(LATCH_SIZE/milliTime)+", count="+LATCH_SIZE);
 
         System.out.println("End="+new Date());
+
+        // make a report
+
+        long totalCorrelated  = 0;
+        long maxCorrelated = 0;
+        long minCorrelated = Long.MAX_VALUE;
+        for (long i=0; i<LATCH_SIZE; i++) {
+            long startCorrelated = correlatedStartTime.get(i);
+            long endCorrelated = correlatedFinishTime.get(i);
+            long correlatedTook = endCorrelated-startCorrelated;
+            if (i % 500 == 0)
+                System.out.println("Correlated ms="+correlatedTook/1_000_000);
+            totalCorrelated += correlatedTook;
+            if (correlatedTook > maxCorrelated)
+                maxCorrelated = totalCorrelated;
+            if (totalCorrelated < minCorrelated)
+                minCorrelated = totalCorrelated;
+        }
+
+        double avgCorrelatedMics = (double) totalCorrelated / LATCH_SIZE / 1000.0d;
+        System.out.println("Avg correlated mics="+avgCorrelatedMics);
+        System.out.println("Min correlated mics="+minCorrelated/1000);
+
     }
 }
