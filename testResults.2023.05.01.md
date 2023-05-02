@@ -19,6 +19,20 @@ This enables Netty unsafe, which shows as enabled in Spring Boot.
 
 ## Performance tests
 
+### With thread affinity (this commit)
+Note:  First sub 160 RTT, First 84 mics best RTT
+```shell
+Experiment size: 20000
+--------------------- Blocking (much faster) --------------------
+Took Nanos=3250044674
+Avg Nanos=162502
+Avg MICS=162
+Took millis=3251, count=20000
+Per milli=6, count=20000
+Avg correlated mics=158.95776665
+Min correlated mics=84
+```
+
 ### Warm-up the test before timing:  85 mics fastest RTT
 
 ```shell

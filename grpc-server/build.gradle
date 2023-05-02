@@ -16,6 +16,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation project(':fb-lib')
 
+    // https://mvnrepository.com/artifact/net.openhft/affinity
+    implementation 'net.openhft:affinity:3.23.3'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
