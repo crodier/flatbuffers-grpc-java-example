@@ -3,6 +3,7 @@ package com.example.fbgrpc;
 import io.grpc.BindableService;
 import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ReflectiveChannelFactory;
 import io.netty.channel.ServerChannel;
@@ -68,29 +69,31 @@ public class GrpcServerLifecycle implements SmartLifecycle {
         // ThreadFactory threadFactory = new AffinityThreadFactory("atf_wrk", AffinityStrategies.DIFFERENT_SOCKET);
 
         // pin the acceptor to core 3, which is 'isolcpu' isolated
-        PinnedCoreAffinityThreadFactory pinnedThree = new PinnedCoreAffinityThreadFactory("acceptor", 3);
+        PinnedCoreAffinityThreadFactory pinnedThree = new PinnedCoreAffinityThreadFactory("acceptor", 4);
         EventLoopGroup acceptorGroup = new EpollEventLoopGroup(acceptorThreads, pinnedThree);
 
         // pin the worker to core 4, which is 'isolcpu' isolated
-        PinnedCoreAffinityThreadFactory pinnedFour = new PinnedCoreAffinityThreadFactory("worker", 4);
+        PinnedCoreAffinityThreadFactory pinnedFour = new PinnedCoreAffinityThreadFactory("worker", 3);
         EventLoopGroup workerGroup = new EpollEventLoopGroup(workerThreads, pinnedFour);
 
         try {
             Class<? extends ServerChannel> serverSocketChannel =
-                    Class
-                            .forName("io.netty.channel.epoll.EpollServerSocketChannel")
+                    Class.forName("io.netty.channel.epoll.EpollServerSocketChannel")
                             .asSubclass(ServerChannel.class);
 
             NettyServerBuilder nettyServerBuilder =
                     NettyServerBuilder.forPort(port)
                             .channelFactory(new ReflectiveChannelFactory<>(serverSocketChannel))
+                            // direct executor with 1 thread should be quickest
+                            .directExecutor()
                             .workerEventLoopGroup(workerGroup)
-                            .bossEventLoopGroup(acceptorGroup);
-
+                            .bossEventLoopGroup(acceptorGroup)
+                            // .withOption(ChannelOption.MAX_MESSAGES_PER_WRITE, 64)
+                            // TODO:  Further tunings, carefully, on a big machine
+                            .withOption(ChannelOption.SO_KEEPALIVE, true)
+                            .withOption(ChannelOption.TCP_NODELAY, true);
 
             // Direct Executor makes sense, single threaded
-            nettyServerBuilder.directExecutor();
-
             services.forEach(nettyServerBuilder::addService);
 
             server = nettyServerBuilder.build();
