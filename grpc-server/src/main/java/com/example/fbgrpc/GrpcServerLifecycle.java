@@ -2,17 +2,13 @@ package com.example.fbgrpc;
 
 import io.grpc.BindableService;
 import io.grpc.Server;
-import io.grpc.ServerBuilder;
 import io.grpc.netty.NettyServerBuilder;
-import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ReflectiveChannelFactory;
 import io.netty.channel.ServerChannel;
 import io.netty.channel.epoll.EpollEventLoopGroup;
-import io.netty.channel.epoll.EpollServerSocketChannel;
-import io.netty.channel.nio.NioEventLoopGroup;
-import net.openhft.affinity.AffinityLock;
 import net.openhft.affinity.AffinityStrategies;
+import net.openhft.affinity.AffinityStrategy;
 import net.openhft.affinity.AffinityThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +16,6 @@ import org.springframework.context.SmartLifecycle;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
 import static java.util.Objects.requireNonNull;
@@ -64,16 +59,21 @@ public class GrpcServerLifecycle implements SmartLifecycle {
 
     private void createServer() {
 
+        // TODO:  Optimize such that these are to cores on one socket, and re-test
         // one acceptor thread, is enough indeed
         final int acceptorThreads = 1;
         // for my test, one worker thread
         final int workerThreads = 1;
         // this will put workers on different cores, with affinity
-        ThreadFactory threadFactory = new AffinityThreadFactory("atf_wrk", AffinityStrategies.SAME_SOCKET);
-        EventLoopGroup acceptorGroup = new EpollEventLoopGroup(acceptorThreads);
-        EventLoopGroup workerGroup = new EpollEventLoopGroup(workerThreads, threadFactory);
-        // ServerBootstrap serverBootstrap = new ServerBootstrap().group(acceptorGroup, workerGroup);
+        // ThreadFactory threadFactory = new AffinityThreadFactory("atf_wrk", AffinityStrategies.DIFFERENT_SOCKET);
 
+        // pin the acceptor to core 3, which is 'isolcpu' isolated
+        PinnedCoreAffinityThreadFactory pinnedThree = new PinnedCoreAffinityThreadFactory("acceptor", 3);
+        EventLoopGroup acceptorGroup = new EpollEventLoopGroup(acceptorThreads, pinnedThree);
+
+        // pin the worker to core 4, which is 'isolcpu' isolated
+        PinnedCoreAffinityThreadFactory pinnedFour = new PinnedCoreAffinityThreadFactory("worker", 4);
+        EventLoopGroup workerGroup = new EpollEventLoopGroup(workerThreads, pinnedFour);
 
         try {
             Class<? extends ServerChannel> serverSocketChannel =
