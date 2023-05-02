@@ -19,6 +19,20 @@ This enables Netty unsafe, which shows as enabled in Spring Boot.
 
 ## Performance tests
 
+### With PinnedThreadFactory (this commit)
+Note:  3159 ms, lowest total millis for 20,000
+```shell
+Experiment size: 20000
+--------------------- Blocking (much faster) --------------------
+Took Nanos=3158576909
+Avg Nanos=157928
+Avg MICS=157
+Took millis=3159, count=20000
+Per milli=6, count=20000
+Avg correlated mics=154.69846354999999
+Min correlated mics=85
+```
+
 ### With thread affinity (this commit)
 Note:  First sub 160 RTT, First 84 mics best RTT
 ```shell
